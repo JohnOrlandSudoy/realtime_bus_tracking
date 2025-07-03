@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase, AdminUser } from '../lib/supabase';
 
 interface AuthContextType {
@@ -28,33 +28,81 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchAdminUser(session.user.id);
+    let timeoutId: NodeJS.Timeout;
+    let isInitialized = false;
+
+    const initializeAuth = async () => {
+      try {
+        // Set a timeout to prevent infinite loading
+        timeoutId = setTimeout(() => {
+          if (!isInitialized) {
+            console.warn('Auth initialization timeout - setting loading to false');
+            setLoading(false);
+          }
+        }, 5000); // 5 second timeout
+
+        // Get initial session
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+        }
+
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await fetchAdminUser(session.user.id);
+        }
+        
+        isInitialized = true;
+        clearTimeout(timeoutId);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        isInitialized = true;
+        clearTimeout(timeoutId);
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+      console.log('🔄 Auth state changed:', event, session?.user?.email || 'No user');
+      console.log('📊 Current loading state:', loading);
+      
+      // Clear timeout if auth state changes
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        console.log('⏰ Cleared timeout');
+      }
+      
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        console.log('👤 User found, fetching admin data...');
         await fetchAdminUser(session.user.id);
       } else {
+        console.log('🚪 No user, clearing admin data...');
         setAdminUser(null);
       }
       
+      isInitialized = true;
       setLoading(false);
+      console.log('✅ Auth state change completed, loading set to false');
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchAdminUser = async (userId: string) => {
@@ -85,7 +133,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      console.log('🔄 Starting sign out process...');
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('❌ Error signing out:', error);
+        return;
+      }
+      console.log('✅ Sign out completed successfully');
+      // Don't manually set state - let onAuthStateChange handle it
+    } catch (error) {
+      console.error('❌ Error during sign out:', error);
+    }
   };
 
   const value = {
