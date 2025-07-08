@@ -41,7 +41,7 @@ const TerminalForm = () => {
           setError(`Location error: ${error.message}`);
         }
       );
-    } catch (error) {
+    } catch {
       setError('Failed to add terminal');
     }
   };

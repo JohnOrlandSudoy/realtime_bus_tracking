@@ -36,7 +36,7 @@ const RouteForm = () => {
       setStops([]);
       setIsSuccessVisible(true);
       setTimeout(() => setIsSuccessVisible(false), 3000);
-    } catch (error) {
+    } catch {
       setError('Failed to add route');
     }
   };

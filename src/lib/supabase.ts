@@ -12,53 +12,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Create Supabase client
-let supabase: any;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  // Create a mock client for development
-  if (import.meta.env.DEV) {
-    console.warn('⚠️ Using mock Supabase client for development');
-    supabase = {
-      auth: {
-        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-        signInWithPassword: () => Promise.resolve({ error: { message: 'Supabase not configured' } }),
-        signOut: () => Promise.resolve({ error: null }),
-      },
-      from: () => ({
-        select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: null, error: null }) }) }),
-      }),
-    };
-  } else {
-    throw new Error('Missing Supabase environment variables. Please check your .env file.');
-  }
-} else {
-  console.log('✅ Supabase environment variables loaded successfully');
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
-}
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export { supabase };
 
-// Database types
-export interface AdminUser {
-  id: string;
-  email: string;
-  full_name: string | null;
-  role: 'admin' | 'super_admin';
-  is_active: boolean;
-  last_login: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
+// Simplified database types (only what you actually need)
 export interface Database {
   public: {
     Tables: {
-      admin_users: {
-        Row: AdminUser;
-        Insert: Omit<AdminUser, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<AdminUser, 'id' | 'created_at' | 'updated_at'>>;
-      };
       terminals: {
         Row: {
           id: string;
@@ -88,7 +49,7 @@ export interface Database {
           name: string;
           start_terminal_id: string | null;
           end_terminal_id: string | null;
-          stops: any;
+          stops: unknown;
           created_at: string;
           updated_at: string;
         };
@@ -96,13 +57,13 @@ export interface Database {
           name: string;
           start_terminal_id?: string;
           end_terminal_id?: string;
-          stops?: any;
+          stops?: unknown;
         };
         Update: Partial<{
           name: string;
           start_terminal_id: string;
           end_terminal_id: string;
-          stops: any;
+          stops: unknown;
         }>;
       };
       buses: {

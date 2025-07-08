@@ -145,7 +145,7 @@ const BusRegistrationForm = () => {
         
         <button
           type="submit"
-          className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-pink-400 hover:bg-busWhite hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-400 transition-colors duration-200"
+          className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-pink-400 hover:bg-busWhite hover:text-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-400 transition-colors duration-200"
         >
           <PlusCircle className="h-4 w-4 mr-2" />
           Register Bus

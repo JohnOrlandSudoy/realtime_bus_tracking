@@ -7,6 +7,7 @@ interface BusContextType {
   routes: Route[];
   addBus: (bus: Omit<Bus, 'id'>) => void;
   updateBus: (id: string, data: Partial<Bus>) => void;
+  updateOccupiedSeats: (id: string, occupiedSeats: number) => void;
   addTerminal: (terminal: Omit<Terminal, 'id'>) => void;
   updateTerminal: (id: string, data: Partial<Terminal>) => void;
   deleteTerminal: (id: string) => void;
@@ -76,6 +77,12 @@ export const BusProvider = ({ children }: { children: ReactNode }) => {
     ));
   };
 
+  const updateOccupiedSeats = (id: string, occupiedSeats: number) => {
+    setBuses(prev => prev.map(bus => 
+      bus.id === id ? { ...bus, occupiedSeats } : bus
+    ));
+  };
+
   const addTerminal = (terminal: Omit<Terminal, 'id'>) => {
     const newTerminal: Terminal = {
       ...terminal,
@@ -133,6 +140,7 @@ export const BusProvider = ({ children }: { children: ReactNode }) => {
       routes,
       addBus,
       updateBus,
+      updateOccupiedSeats,
       addTerminal,
       updateTerminal,
       deleteTerminal,
